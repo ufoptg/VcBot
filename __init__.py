@@ -74,7 +74,7 @@ def get_vc_auth_users() -> List[int]:
     return [int(user_id) for user_id in (*owner_and_sudos(), *vc_sudos)]
 
 
-class VoiceChatManager:
+class Player:
     """
     Manages voice chat operations including joining, leaving, and handling playback queues.
     """
@@ -156,7 +156,7 @@ class VoiceChatManager:
             VIDEO_ON.pop(chat_id, None)
 
         try:
-            song_info = await VoiceChatManager.get_from_queue(chat_id)
+            song_info = await self.get_from_queue(chat_id)
             if not song_info:
                 raise ValueError("No songs in queue.")
 
@@ -239,7 +239,7 @@ class VoiceChatManager:
             return None
         play_position = min(queue.keys())
         info = queue[play_position]
-        song = info.get("song") or await VoiceChatManager.fetch_stream_link(info["link"])
+        song = info.get("song") or await Player.fetch_stream_link(info["link"])
         return (
             song,
             info["title"],
@@ -388,7 +388,7 @@ async def download(query: str) -> Tuple[Optional[str], Optional[str], Optional[s
     duration = data.get("duration") or "♾"
     thumb = f"https://i.ytimg.com/vi/{data['id']}/hqdefault.jpg"
 
-    stream_link = await VoiceChatManager.fetch_stream_link(link)
+    stream_link = await Player.fetch_stream_link(link)
     return stream_link, thumb, title, link, duration
 
 
@@ -412,7 +412,7 @@ async def vid_download(query: str) -> Tuple[Optional[str], Optional[str], Option
     duration = data.get("duration") or "♾"
     thumb = f"https://i.ytimg.com/vi/{data['id']}/hqdefault.jpg"
 
-    video_link = await VoiceChatManager.fetch_stream_link(link)
+    video_link = await Player.fetch_stream_link(link)
     return video_link, thumb, title, link, duration
 
 
@@ -437,7 +437,7 @@ async def dl_playlist(chat_id: int, from_user: str, link: str):
             title = vid["title"]
             thumb = f"https://i.ytimg.com/vi/{vid['id']}/hqdefault.jpg"
 
-            stream_link = await VoiceChatManager.fetch_stream_link(vid["link"])
+            stream_link = await Player.fetch_stream_link(vid["link"])
             add_to_queue(chat_id, None, title, vid["link"], thumb, from_user, duration)
         except Exception as e:
             LOGS.exception(f"Failed to add video to queue: {e}")
@@ -479,3 +479,5 @@ async def file_download(event: events.NewMessage.Event, reply, fast_download: bo
     except Exception as e:
         LOGS.exception(f"Failed to download file: {e}")
         return None, thumb, title, reply.message.link, "Unknown"
+
+
